@@ -2,26 +2,56 @@ import Header from "./Header/Header";
 import Main from "./Main/Main";
 import Footer from "./Footer/Footer";
 import ImagePopup from "./ImagePopup/ImagePopup";
-import api from "../utils/api";
+import {api} from "../utils/api";
 import EditProfilePopup from "./EditProfilePopup/EditProfilePopup";
 import EditAvatarPopup from "./EditAvatarPopup/EditAvatarPopup";
 import AddPlacePopup from "./AddPlacePopup/AddPlacePopup";
 import ConfirmationPopup from "./ConfirmationPopup/ConfirmationPopup";
+import InfoTooltip from "./InfoTooltip/InfoTooltip";
 import {useEffect, useState} from "react";
 import {CurrentUserContext} from "../contexts/CurrentUserContext";
 import FormValidator from "../utils/FormValidator";
 import {validationConfig} from "../utils/constants";
+import Register from "./Register/Register";
+import Login from "./Login/Login";
+import * as mestoAuth from "../utils/mestoAuth";
+import {Routes, Route, Navigate, useNavigate} from "react-router-dom";
+import ProtectedRouteElement from "./ProtectedRout/ProtectedRout";
 
 function App() {
   const [isEditProfilePopupOpen, setEditProfilePopupState] = useState(false);
   const [isAddPlacePopupOpen, setAddPlacePopupState] = useState(false);
   const [isEditAvatarPopupOpen, setEditAvatarPopupState] = useState(false);
   const [isConfirmationPopupOpen, setConfirmationPopupState] = useState(false);
+  const [isInfoTooltipOpen, setInfoTooltipState] = useState(false);
+  const [authorizeState, setAuthorizeState] = useState(false);
   const [isImagePopupOpen, setImagePopupState] = useState(false);
   const [selectedCard, setSelectedCard] = useState({});
   const [currentUser, setCurrentUser] = useState({name: "", about: ""});
   const [cards, setCards] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loggedIn, setloggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const navigate = useNavigate();
+
+  function auth(jwt) {
+    if (jwt) {
+      mestoAuth.tokenCheck(jwt).then((res) => {
+        if (res) {
+          setUserEmail(res.data.email);
+          setloggedIn(true);
+          navigate("/");
+        } else {
+          setloggedIn(false);
+        }
+      });
+    }
+  }
+
+  useEffect(() => {
+    const jwt = localStorage.getItem("jwt");
+    auth(jwt);
+  }, []);
 
   useEffect(() => {
     api
@@ -59,6 +89,7 @@ function App() {
         isEditAvatarPopupOpen,
         isConfirmationPopupOpen,
         isImagePopupOpen,
+        isInfoTooltipOpen,
       ].some((state) => {
         return state === true;
       })
@@ -75,6 +106,7 @@ function App() {
     isEditAvatarPopupOpen,
     isConfirmationPopupOpen,
     isImagePopupOpen,
+    isInfoTooltipOpen,
   ]);
 
   function changeAllPopupsState() {
@@ -83,6 +115,7 @@ function App() {
     setEditProfilePopupState(false);
     setImagePopupState(false);
     setConfirmationPopupState(false);
+    setInfoTooltipState(false);
   }
 
   function closeAllPopups(evt) {
@@ -223,19 +256,87 @@ function App() {
 
   enableValidation(validationConfig);
 
+  function handleRegister({email, password}) {
+    return mestoAuth
+      .register(email, password)
+      .then((res) => {
+        if (res.data) {
+          setAuthorizeState(true);
+          setInfoTooltipState(true);
+          navigate("/sign-in");
+        } else {
+          setAuthorizeState(false);
+          setInfoTooltipState(true);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  function handleLogin({email, password}) {
+    return mestoAuth
+      .authorize(email, password)
+      .then((res) => {
+        if (res.token) {
+          setloggedIn(true);
+          setUserEmail(email);
+          localStorage.setItem("jwt", res.token);
+          navigate("/");
+        } else {
+          setInfoTooltipState(true);
+          setAuthorizeState(false);
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  function signOut() {
+    localStorage.removeItem("jwt");
+    setloggedIn(false);
+    navigate("/sign-in");
+  }
+
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
-        <Header />
-        <Main
-          onEditAvatar={handleEditAvatarClick}
-          onEditProfile={handleEditProfileClick}
-          onAddPlace={handleAddPlaceClick}
-          onCardClick={handleCardClick}
-          onCardLike={handleCardLike}
-          onCardDelete={handleCardDelete}
-          cards={cards}
-        />
+        <Header userEmail={userEmail} signOut={signOut} />
+        <Routes>
+          <Route
+            path="*"
+            element={
+              loggedIn ? (
+                <Navigate to="/" replace />
+              ) : (
+                <Navigate to="/sign-in" replace />
+              )
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedRouteElement
+                element={Main}
+                loggedIn={loggedIn}
+                userEmail={userEmail}
+                onEditAvatar={handleEditAvatarClick}
+                onEditProfile={handleEditProfileClick}
+                onAddPlace={handleAddPlaceClick}
+                onCardClick={handleCardClick}
+                onCardLike={handleCardLike}
+                onCardDelete={handleCardDelete}
+                cards={cards}
+              />
+            }
+          />
+          <Route
+            path="/sign-up"
+            element={<Register onRegister={handleRegister} />}
+          />
+          <Route path="/sign-in" element={<Login onLogin={handleLogin} />} />
+        </Routes>
         <Footer />
       </div>
 
@@ -271,6 +372,12 @@ function App() {
       <ImagePopup
         card={selectedCard}
         isOpen={isImagePopupOpen}
+        onClose={closeAllPopups}
+      />
+
+      <InfoTooltip
+        isOpen={isInfoTooltipOpen}
+        isSuccess={authorizeState}
         onClose={closeAllPopups}
       />
     </CurrentUserContext.Provider>
