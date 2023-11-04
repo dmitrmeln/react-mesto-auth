@@ -30,7 +30,7 @@ export default function AddPlacePopup(props) {
         type="text"
         onChange={handleChange}
         className={
-          !errors.link ? "popup__input" : "popup__input popup__input_type_error"
+          !errors.name ? "popup__input" : "popup__input popup__input_type_error"
         }
         id="popup__card-name"
         name="name"
