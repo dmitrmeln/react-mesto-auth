@@ -10,13 +10,10 @@ import ConfirmationPopup from "./ConfirmationPopup/ConfirmationPopup";
 import InfoTooltip from "./InfoTooltip/InfoTooltip";
 import {useEffect, useState} from "react";
 import {CurrentUserContext} from "../contexts/CurrentUserContext";
-import FormValidator from "../utils/FormValidator";
-import {validationConfig} from "../utils/constants";
-import Register from "./Register/Register";
-import Login from "./Login/Login";
 import * as mestoAuth from "../utils/mestoAuth";
-import {Routes, Route, Navigate, useNavigate} from "react-router-dom";
+import {Routes, Route, Navigate, useNavigate, Link} from "react-router-dom";
 import ProtectedRouteElement from "./ProtectedRout/ProtectedRout";
+import AuthForm from "./AuthForm/AuthForm";
 
 function App() {
   const [isEditProfilePopupOpen, setEditProfilePopupState] = useState(false);
@@ -36,15 +33,17 @@ function App() {
 
   function auth(jwt) {
     if (jwt) {
-      mestoAuth.tokenCheck(jwt).then((res) => {
-        if (res) {
+      mestoAuth
+        .tokenCheck(jwt)
+        .then((res) => {
           setUserEmail(res.data.email);
           setloggedIn(true);
           navigate("/");
-        } else {
+        })
+        .catch((error) => {
+          console.log(error);
           setloggedIn(false);
-        }
-      });
+        });
     }
   }
 
@@ -129,18 +128,14 @@ function App() {
   }
 
   function handleEditAvatarClick() {
-    formValidators["avatar-form"].resetValidation();
-    formValidators["avatar-form"].clearForm();
     setEditAvatarPopupState(true);
   }
 
   function handleEditProfileClick() {
-    formValidators["edit-form"].resetValidation();
     setEditProfilePopupState(true);
   }
 
   function handleAddPlaceClick() {
-    formValidators["add-form"].resetValidation();
     setAddPlacePopupState(true);
   }
 
@@ -241,36 +236,18 @@ function App() {
       });
   }
 
-  const formValidators = {};
-
-  const enableValidation = (config) => {
-    const formList = Array.from(document.querySelectorAll(config.formSelector));
-    formList.forEach((formElement) => {
-      const validator = new FormValidator(config, formElement);
-      const formName = formElement.getAttribute("name");
-
-      formValidators[formName] = validator;
-      validator.enableValidation();
-    });
-  };
-
-  enableValidation(validationConfig);
-
   function handleRegister({email, password}) {
     return mestoAuth
       .register(email, password)
       .then((res) => {
-        if (res.data) {
-          setAuthorizeState(true);
-          setInfoTooltipState(true);
-          navigate("/sign-in");
-        } else {
-          setAuthorizeState(false);
-          setInfoTooltipState(true);
-        }
+        setAuthorizeState(true);
+        setInfoTooltipState(true);
+        navigate("/sign-in");
       })
       .catch((error) => {
         console.log(error);
+        setAuthorizeState(false);
+        setInfoTooltipState(true);
       });
   }
 
@@ -278,18 +255,15 @@ function App() {
     return mestoAuth
       .authorize(email, password)
       .then((res) => {
-        if (res.token) {
-          setloggedIn(true);
-          setUserEmail(email);
-          localStorage.setItem("jwt", res.token);
-          navigate("/");
-        } else {
-          setInfoTooltipState(true);
-          setAuthorizeState(false);
-        }
+        setloggedIn(true);
+        setUserEmail(email);
+        localStorage.setItem("jwt", res.token);
+        navigate("/");
       })
       .catch((error) => {
         console.log(error);
+        setInfoTooltipState(true);
+        setAuthorizeState(false);
       });
   }
 
@@ -333,9 +307,27 @@ function App() {
           />
           <Route
             path="/sign-up"
-            element={<Register onRegister={handleRegister} />}
+            element={
+              <AuthForm
+                formHeading="Регистрация"
+                submitButtonName="Зарегистрироваться"
+                onSubmit={handleRegister}>
+                <Link className="authorize__login-link" to="/sign-in">
+                  Уже зарегистрированы? Войти
+                </Link>
+              </AuthForm>
+            }
           />
-          <Route path="/sign-in" element={<Login onLogin={handleLogin} />} />
+          <Route
+            path="/sign-in"
+            element={
+              <AuthForm
+                submitButtonName="Войти"
+                formHeading="Вход"
+                onSubmit={handleLogin}
+              />
+            }
+          />
         </Routes>
         <Footer />
       </div>

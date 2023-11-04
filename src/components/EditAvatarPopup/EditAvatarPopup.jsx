@@ -1,45 +1,51 @@
-import {useRef} from "react";
+import PopupWithForm from "../PopupWithForm/PopupWithForm";
+import {useEffect} from "react";
+import {useFormAndValidation} from "../../hooks/useFormAndValidation";
 
 export default function EditAvatarPopup(props) {
-  const avatarRef = useRef();
+  const {values, handleChange, errors, isValid, setValues, resetForm} =
+    useFormAndValidation();
+
+  useEffect(() => {
+    resetForm();
+    setValues({link: ""});
+  }, [props.isOpen]);
 
   function handleSubmit(evt) {
     evt.preventDefault();
 
     props.onUpdateAvatar({
-      avatar: avatarRef.current.value,
+      avatar: values.link,
     });
   }
 
   return (
-    <div>
-      <div
-        onMouseDown={props.onClose}
-        className={`popup ${props.isOpen ? "popup_opened" : ""}`}>
-        <div className="popup__container">
-          <button type="button" className="popup__close-button"></button>
-          <form
-            className="popup__form"
-            name="avatar-form"
-            onSubmit={handleSubmit}
-            noValidate>
-            <h2 className="popup__heading">Обновить аватар</h2>
-            <input
-              type="url"
-              ref={avatarRef}
-              className="popup__input"
-              id="popup__avatar-link"
-              name="link"
-              placeholder="Ссылка на картинку"
-              required
-            />
-            <span className="popup__error popup__avatar-link-error"></span>
-            <button type="submit" className="popup__button">
-              {props.isLoading ? "Сохранение..." : "Сохранить"}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
+    <PopupWithForm
+      onClose={props.onClose}
+      isOpen={props.isOpen}
+      handleSubmit={handleSubmit}
+      popupHeading={"Обновить аватар"}>
+      <input
+        type="url"
+        value={values.link}
+        onChange={handleChange}
+        className={
+          !errors.link ? "popup__input" : "popup__input popup__input_type_error"
+        }
+        id="popup__avatar-link"
+        name="link"
+        placeholder="Ссылка на картинку"
+        required
+      />
+      <span className="popup__error">{errors.link}</span>
+      <button
+        disabled={!isValid ? true : false}
+        type="submit"
+        className={
+          isValid ? "popup__button" : "popup__button popup__button_disabled"
+        }>
+        {props.isLoading ? "Сохранение..." : "Сохранить"}
+      </button>
+    </PopupWithForm>
   );
 }

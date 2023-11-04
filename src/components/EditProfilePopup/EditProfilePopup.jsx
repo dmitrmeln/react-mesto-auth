@@ -1,77 +1,73 @@
-import {useContext, useEffect, useState} from "react";
+import PopupWithForm from "../PopupWithForm/PopupWithForm";
+import {useContext, useEffect} from "react";
 import {CurrentUserContext} from "../../contexts/CurrentUserContext";
+import {useFormAndValidation} from "../../hooks/useFormAndValidation";
 
 export default function EditProfilePopup(props) {
   const currentUser = useContext(CurrentUserContext);
+  const {values, handleChange, errors, isValid, setValues, resetForm} =
+    useFormAndValidation();
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-
-  function handleNameChange(evt) {
-    setName(evt.target.value);
-  }
-
-  function handleDescriptionChange(evt) {
-    setDescription(evt.target.value);
-  }
+  useEffect(() => {
+    resetForm();
+    setValues(currentUser);
+  }, [currentUser, props.isOpen]);
 
   function handleSubmit(evt) {
     evt.preventDefault();
 
     props.onUpdateUser({
-      name,
-      about: description,
+      name: values.name,
+      about: values.about,
     });
   }
 
-  useEffect(() => {
-    setName(currentUser.name);
-    setDescription(currentUser.about);
-  }, [currentUser]);
-
   return (
-    <div>
-      <div
-        onMouseDown={props.onClose}
-        className={`popup ${props.isOpen ? "popup_opened" : ""}`}>
-        <div className="popup__container">
-          <button type="button" className="popup__close-button"></button>
-          <form
-            className="popup__form"
-            name="edit-form"
-            onSubmit={handleSubmit}
-            noValidate>
-            <h2 className="popup__heading">Редактировать профиль</h2>
-            <input
-              type="text"
-              value={name}
-              onChange={handleNameChange}
-              className="popup__input"
-              id="popup__name"
-              name="name"
-              minLength="2"
-              maxLength="40"
-              required
-            />
-            <span className="popup__error popup__name-error"></span>
-            <input
-              type="text"
-              value={description}
-              onChange={handleDescriptionChange}
-              className="popup__input"
-              id="popup__about"
-              name="about"
-              minLength="2"
-              maxLength="200"
-              required
-            />
-            <span className="popup__error popup__about-error"></span>
-            <button type="submit" className="popup__button">
-              {props.isLoading ? "Сохранение..." : "Сохранить"}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
+    <PopupWithForm
+      onClose={props.onClose}
+      isOpen={props.isOpen}
+      handleSubmit={handleSubmit}
+      popupHeading={"Редактировать профиль"}>
+      <input
+        type="text"
+        value={values.name}
+        onChange={handleChange}
+        className={
+          !errors.name ? "popup__input" : "popup__input popup__input_type_error"
+        }
+        id="popup__name"
+        name="name"
+        minLength="2"
+        maxLength="40"
+        required
+      />
+      <span className="popup__error">{errors.name}</span>
+      <input
+        type="text"
+        value={values.about}
+        onChange={handleChange}
+        className={
+          !errors.about
+            ? "popup__input"
+            : "popup__input popup__input_type_error"
+        }
+        id="popup__about"
+        name="about"
+        minLength="2"
+        maxLength="200"
+        required
+      />
+      <span className="popup__error">{errors.about}</span>
+      <button
+        disabled={!isValid ? true : false}
+        type="submit"
+        className={
+          !errors.about && !errors.name
+            ? "popup__button"
+            : "popup__button popup__button_disabled"
+        }>
+        {props.isLoading ? "Сохранение..." : "Сохранить"}
+      </button>
+    </PopupWithForm>
   );
 }

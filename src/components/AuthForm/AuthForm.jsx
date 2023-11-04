@@ -1,6 +1,6 @@
 import {useState} from "react";
 
-export default function Login(props) {
+export default function AuthForm(props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -16,14 +16,17 @@ export default function Login(props) {
     evt.preventDefault();
 
     props
-      .onLogin({
+      .onSubmit({
         email,
         password,
       })
       .then(() => {
         setEmail("");
         setPassword("");
-      });
+      })
+      .catch((error) => {
+        console.log(error);
+      })
   }
 
   return (
@@ -32,7 +35,7 @@ export default function Login(props) {
         className="authorize__form"
         name="login-form"
         onSubmit={handleSubmit}>
-        <h2 className="authorize__heading">Вход</h2>
+        <h2 className="authorize__heading">{props.formHeading}</h2>
         <input
           type="email"
           placeholder="Email"
@@ -43,7 +46,6 @@ export default function Login(props) {
           name="email"
           minLength="2"
           maxLength="40"
-          autoComplete="on"
           required
         />
         <span className="authorize__error authorize__email-error"></span>
@@ -57,13 +59,13 @@ export default function Login(props) {
           name="password"
           minLength="5"
           maxLength="16"
-          autoComplete="on"
           required
         />
         <span className="authorize__error authorize__password-error"></span>
         <button type="submit" className="authorize__button">
-          Войти
+          {props.submitButtonName}
         </button>
+        {props.children}
       </form>
     </div>
   );
