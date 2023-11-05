@@ -24,10 +24,14 @@ export default function EditAvatarPopup(props) {
       onClose={props.onClose}
       isOpen={props.isOpen}
       handleSubmit={handleSubmit}
-      popupHeading={"Обновить аватар"}>
+      popupHeading="Обновить аватар"
+      buttonText="Сохранить"
+      buttonLoadingText="Сохранение..."
+      isLoading={props.isLoading}
+      isValid={isValid}>
       <input
         type="url"
-        value={values.link}
+        value={values.link || ''}
         onChange={handleChange}
         className={
           !errors.link ? "popup__input" : "popup__input popup__input_type_error"
@@ -38,14 +42,6 @@ export default function EditAvatarPopup(props) {
         required
       />
       <span className="popup__error">{errors.link}</span>
-      <button
-        disabled={!isValid ? true : false}
-        type="submit"
-        className={
-          isValid ? "popup__button" : "popup__button popup__button_disabled"
-        }>
-        {props.isLoading ? "Сохранение..." : "Сохранить"}
-      </button>
     </PopupWithForm>
   );
 }

@@ -5,11 +5,11 @@ import {useFormAndValidation} from "../../hooks/useFormAndValidation";
 
 export default function EditProfilePopup(props) {
   const currentUser = useContext(CurrentUserContext);
-  const {values, handleChange, errors, isValid, setValues, resetForm} =
+  const {values, handleChange, errors, isValid, setValues, clearErrors} =
     useFormAndValidation();
 
   useEffect(() => {
-    resetForm();
+    clearErrors();
     setValues(currentUser);
   }, [currentUser, props.isOpen]);
 
@@ -27,10 +27,14 @@ export default function EditProfilePopup(props) {
       onClose={props.onClose}
       isOpen={props.isOpen}
       handleSubmit={handleSubmit}
-      popupHeading={"Редактировать профиль"}>
+      popupHeading="Редактировать профиль"
+      buttonText="Сохранить"
+      buttonLoadingText="Сохранение..."
+      isLoading={props.isLoading}
+      isValid={isValid}>
       <input
         type="text"
-        value={values.name}
+        value={values.name || ""}
         onChange={handleChange}
         className={
           !errors.name ? "popup__input" : "popup__input popup__input_type_error"
@@ -44,7 +48,7 @@ export default function EditProfilePopup(props) {
       <span className="popup__error">{errors.name}</span>
       <input
         type="text"
-        value={values.about}
+        value={values.about || ""}
         onChange={handleChange}
         className={
           !errors.about
@@ -58,16 +62,6 @@ export default function EditProfilePopup(props) {
         required
       />
       <span className="popup__error">{errors.about}</span>
-      <button
-        disabled={!isValid ? true : false}
-        type="submit"
-        className={
-          !errors.about && !errors.name
-            ? "popup__button"
-            : "popup__button popup__button_disabled"
-        }>
-        {props.isLoading ? "Сохранение..." : "Сохранить"}
-      </button>
     </PopupWithForm>
   );
 }

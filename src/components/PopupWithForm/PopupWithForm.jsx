@@ -13,6 +13,16 @@ export default function PopupWithForm(props) {
             noValidate>
             <h2 className="popup__heading">{props.popupHeading}</h2>
             {props.children}
+            <button
+              disabled={!props.isValid ? true : false}
+              type="submit"
+              className={
+                props.isValid
+                  ? "popup__button"
+                  : "popup__button popup__button_disabled"
+              }>
+              {props.isLoading ? props.buttonLoadingText : props.buttonText}
+            </button>
           </form>
         </div>
       </div>
