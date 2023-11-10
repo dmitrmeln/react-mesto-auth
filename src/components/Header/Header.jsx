@@ -18,7 +18,7 @@ function Header({userEmail, signOut, onInteractiveBtnClick, isOpen}) {
 
   return (
     <>
-      {isOpen && (
+      {isOpen && currentPath === "/" && (
         <div className="header__opening-container">
           <h2 className="header__user">{userEmail}</h2>
           <button
@@ -56,7 +56,7 @@ function Header({userEmail, signOut, onInteractiveBtnClick, isOpen}) {
               <img
                 onClick={onInteractiveBtnClick}
                 className="header__interactive-button"
-                src={!isOpen? headerBtn: closeBtn}
+                src={!isOpen ? headerBtn : closeBtn}
                 alt="кнопка"
               />
             </>
