@@ -28,6 +28,7 @@ function App() {
   const [cards, setCards] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loggedIn, setloggedIn] = useState(false);
+  const [isUserInfoOpen, setIsUserInfoState] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const navigate = useNavigate();
 
@@ -273,10 +274,19 @@ function App() {
     navigate("/sign-in");
   }
 
+  function handleInteractiveBtnClick() {
+    setIsUserInfoState(!isUserInfoOpen)
+  }
+    
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
-        <Header userEmail={userEmail} signOut={signOut} />
+        <Header
+          onInteractiveBtnClick={handleInteractiveBtnClick}
+          userEmail={userEmail}
+          signOut={signOut}
+          isOpen={isUserInfoOpen}
+        />
         <Routes>
           <Route
             path="*"
